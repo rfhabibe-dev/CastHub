@@ -1,0 +1,11 @@
+[functions.publish-orchestrator]
+verify_jwt = false
+
+[functions.oauth-handler]
+verify_jwt = false
+
+[functions.scheduled-publisher]
+verify_jwt = false
+
+[functions.pinterest-boards]
+verify_jwt = false
