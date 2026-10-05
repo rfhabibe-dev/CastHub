@@ -1,7 +1,7 @@
 # Environment Variables — CastHub Multi-Platform Publishing
 
 This document lists every secret and environment variable required by the application.
-All secrets are configured as **Edge Function Secrets** in your Supabase project — never in the frontend `.env`.
+Private platform credentials are configured as **Edge Function Secrets** in your Supabase project — never in the frontend or any `NEXT_PUBLIC_` variable. The browser only needs the public Supabase URL and anon key for its client connection.
 
 ## Already Configured (Supabase Built-in)
 
@@ -30,7 +30,7 @@ All secrets are configured as **Edge Function Secrets** in your Supabase project
 
 | Variable | Platform | Obligatory | Secret? | Where Used | Description |
 |----------|----------|------------|---------|------------|-------------|
-| `OAUTH_REDIRECT_URI` | All OAuth | No* | No | `oauth-handler/index.ts` | The redirect URI registered with each OAuth provider. Defaults to `{SUPABASE_URL}/functions/v1/oauth-handler`. Override if using a custom domain. |
+| `OAUTH_REDIRECT_URI` | All OAuth | No | No | `oauth-handler/index.ts` | Optional fallback only. The current browser flow sends `${window.location.origin}/connections` explicitly for both authorization and token exchange. Set this only if a server-side fallback is needed, using the exact production `/connections` URL. |
 
 ### YouTube (Google)
 
@@ -96,8 +96,7 @@ All secrets are configured as **Edge Function Secrets** in your Supabase project
 
 ## OAuth Redirect URIs
 
-The OAuth flow uses the **frontend URL** as the redirect URI (not the edge function URL).
-When the user returns to the app with a `code` parameter, the frontend sends it to the `oauth-handler` edge function for token exchange.
+The OAuth flow uses the **frontend URL** as the redirect URI (not the edge function URL). The Connections page sends its current origin plus `/connections` to the Edge Function for authorization and token exchange. `OAUTH_REDIRECT_URI` is not required for this normal browser flow; it is only a fallback if the request does not include a redirect URI.
 
 Register this exact URI in each platform's developer console:
 
@@ -109,8 +108,7 @@ Register this exact URI in each platform's developer console:
 | TikTok | `https://YOUR_APP_URL/connections` | TikTok for Developers → Your App → Login Configuration |
 | Pinterest | `https://YOUR_APP_URL/connections` | Pinterest Developers → Your App → Redirect URIs |
 
-**Note:** Replace `YOUR_APP_URL` with your actual deployed app URL (e.g. `https://casthub.netlify.app`).
-The redirect URI is `${window.location.origin}/connections` — the Connections page handles the OAuth callback.
+**Note:** Replace `YOUR_APP_URL` with your actual deployed app URL. Do not use a GitHub Pages preview or invent a domain. The redirect URI is `${window.location.origin}/connections` — the Connections page handles the OAuth callback.
 
 **Callback implementation:** `app/(app)/connections/page.tsx` — the `useEffect` at line 195 detects `code` and `state` URL parameters and sends them to the `oauth-handler` edge function.
 
@@ -132,7 +130,7 @@ The redirect URI is `${window.location.origin}/connections` — the Connections 
 |-------------|----------|----------|-----------------|
 | `TOKEN_ENCRYPTION_KEY` | All | **Yes** | Generate: `openssl rand -base64 32` |
 | `MOCK_MODE` | All | No | Set to `"true"` for testing |
-| `OAUTH_REDIRECT_URI` | All OAuth | No | Your Supabase function URL (auto-detected if not set) |
+| `OAUTH_REDIRECT_URI` | All OAuth | No | Optional production frontend callback URL, used only as a fallback |
 | `GOOGLE_CLIENT_ID` | YouTube | **Yes** | Google Cloud Console |
 | `GOOGLE_CLIENT_SECRET` | YouTube | **Yes** | Google Cloud Console |
 | `META_APP_ID` | Facebook + Instagram | **Yes** | Meta for Developers |
